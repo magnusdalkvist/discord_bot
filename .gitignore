@@ -46,3 +46,4 @@ bot/venv
 bot/__pycache__
 bot/config.py
 bot/sounds.py
+bot/sounds.json
