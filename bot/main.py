@@ -83,12 +83,6 @@ async def leave(interaction: discord.Interaction):
         )
 
 
-@bot.tree.command(name="say", description="Make the bot say something")
-@app_commands.describe(thing_to_say="The message to say")
-async def say(interaction: discord.Interaction, thing_to_say: str):
-    await interaction.response.send_message(thing_to_say)
-
-
 @bot.tree.command(name="nick", description="Change a user's nickname")
 @app_commands.describe(
     user="The user to change the nickname for",
@@ -238,6 +232,7 @@ class Buttons(discord.ui.View):
         try: 
             with open('sounds.json', 'r') as f:
                 sounds = json.load(f)
+            sounds = sorted(sounds, key=lambda x: x['displayname'].lower())
                 # find the user's favorite sounds in sound.favoritedBy[]
             favorite_sounds = [sound for sound in sounds if str(user_id) in sound.get('favoritedBy', [])]
             if not favorite_sounds:
@@ -253,6 +248,7 @@ class Buttons(discord.ui.View):
         try: 
             with open('sounds.json', 'r') as f:
                 sounds = json.load(f)
+            sounds = sorted(sounds, key=lambda x: x['displayname'].lower())
         except Exception as e:
             await interaction.response.edit_message(content=f"Error: {e}")
             await asyncio.sleep(3)
@@ -359,10 +355,7 @@ async def play_random_sounds():
     print(f"Checking if sound effect should be played...")
     if random.randint(1, 100) <= chance:
         try:
-            with open('sounds.json', 'r') as f:
-                sounds = json.load(f)
-                sound = random.choice(sounds)
-            play_sound(sound['filename'])
+            play_sound()
         except Exception as e:
             print(f"Error playing sound effect: {e}")
 

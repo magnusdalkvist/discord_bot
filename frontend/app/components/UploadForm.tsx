@@ -17,7 +17,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const maxFileSize = 1.5 * 1024 * 1024; // 1.5MB
+const maxFileSize = 1 * 1024 * 1024; // 1MB
 
 const formSchema = z.object({
   displayname: z
@@ -49,7 +49,7 @@ const formSchema = z.object({
         return file.size <= maxFileSize;
       },
       {
-        message: `File must be less than 1.5MB`,
+        message: `File must be less than 1MB`,
       }
     )
     .optional(),

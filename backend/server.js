@@ -5,6 +5,8 @@ const path = require("path");
 const cors = require("cors");
 
 const app = express();
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
+app.use(express.json({ limit: '1mb' }));
 const PORT = 4000; // Change if needed
 const SOUND_DIR = path.join(__dirname, "../bot/sounds/");
 const JSON_FILE = path.join(__dirname, "../bot/sounds.json");
@@ -32,7 +34,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: 1 * 1024 * 1024 } });
 
 // API Endpoint to Upload an Audio File with Display Name
 app.post("/api/upload", upload.single("audio"), (req, res) => {

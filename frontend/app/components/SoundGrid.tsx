@@ -31,7 +31,7 @@ export default function SoundGrid({ filter }: { filter?: "uploads" | "favorites"
         setSounds(filteredSounds);
       })
       .finally(() => {
-        setTimeout(() => setIsLoading(false), 500);
+        setTimeout(() => setIsLoading(false), 300);
       });
   }, [session?.data?.user?.id, filter]);
 
@@ -41,7 +41,7 @@ export default function SoundGrid({ filter }: { filter?: "uploads" | "favorites"
     return (
       <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
         {[...Array(12)].map((_, index) => (
-          <Skeleton key={index} className="h-[134px] w-full rounded-lg" />
+          <Skeleton key={index} className="min-h-[150px] w-full rounded-lg" />
         ))}
       </div>
     );
@@ -61,10 +61,10 @@ export default function SoundGrid({ filter }: { filter?: "uploads" | "favorites"
       ))}
       {sortedSounds.length === 0 && (
         <>
-          <div className="flex flex-col text-center items-center justify-center p-4 bg-[#f1f3f4] rounded-lg text-black h-[134px] w-full">
+          <div className="flex flex-col text-center items-center justify-center p-4 bg-[#f1f3f4] rounded-lg text-black min-h-[150px] w-full">
             <p className="font-semibold">It looks like there are no sounds here.</p>
           </div>
-          <div className="flex flex-col text-center items-center justify-center p-4 bg-[#f1f3f4] rounded-lg text-black h-[134px] w-full">
+          <div className="flex flex-col text-center items-center justify-center p-4 bg-[#f1f3f4] rounded-lg text-black min-h-[150px] w-full">
             <p className="font-semibold">
               {filter === "uploads" && "You haven't uploaded any sounds yet."}
               {filter === "favorites" && "You haven't favorited any sounds yet."}

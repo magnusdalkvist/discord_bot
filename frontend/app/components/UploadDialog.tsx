@@ -21,9 +21,9 @@ export default function UploadDialog() {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Upload sound</DialogTitle>
-          <DialogDescription>
-            Upload a sound to the soundboard. Sounds must be in an audio format and less than 1.5MB.
-          </DialogDescription>
+            <DialogDescription>
+            Add a new sound to the soundboard. Ensure the file is in an audio format and under 1MB.
+            </DialogDescription>
         </DialogHeader>
         <UploadForm setOpen={setOpen}/>
       </DialogContent>

@@ -41,13 +41,14 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <SidebarProvider>
-          <AppSidebar user={session?.user} />
-          <SidebarInset>
-            <header className="flex justify-between h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-              <div className="flex items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1" />
-                {/* {breadcrumbs && (
+        <SessionProvider>
+          <SidebarProvider>
+            <AppSidebar user={session?.user} />
+            <SidebarInset>
+              <header className="flex justify-between h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+                <div className="flex items-center gap-2 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  {/* {breadcrumbs && (
                                 <>
                                 <Separator orientation="vertical" className="mr-2 h-4" />
                                 <Breadcrumb>
@@ -71,19 +72,18 @@ export default async function RootLayout({
                                     </Breadcrumb>
                                     </>
                                     )} */}
-              </div>
-              <div className="flex items-center gap-2 px-4">
-                {session?.user && <UploadDialog />}
-              </div>
-            </header>
-            <SessionProvider>
+                </div>
+                <div className="flex items-center gap-2 px-4">
+                  {session?.user && <UploadDialog />}
+                </div>
+              </header>
               <div className="flex flex-1 flex-col p-4 pt-0">
                 {children}
                 <Toaster />
               </div>
-            </SessionProvider>
-          </SidebarInset>
-        </SidebarProvider>
+            </SidebarInset>
+          </SidebarProvider>
+        </SessionProvider>
       </body>
     </html>
   );

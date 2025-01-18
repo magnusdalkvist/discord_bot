@@ -45,7 +45,7 @@ export default function Sound({ sound, favorited }: { sound: Sound; favorited?: 
   return (
     <div
       key={sound.filename}
-      className="flex flex-col items-center p-4 pt-10 bg-[#f1f3f4] rounded-lg text-black relative"
+      className="min-h-[150px] flex flex-col items-center justify-center p-4 pt-10 bg-[#f1f3f4] rounded-lg text-black relative"
     >
       <div className="absolute top-2 left-2 h-6 cursor-pointer" onClick={handleClick}>
         <HeartIcon
@@ -57,6 +57,7 @@ export default function Sound({ sound, favorited }: { sound: Sound; favorited?: 
         {sound.category}
       </p>
       <p className="font-bold">{sound.displayname}</p>
+      {sound.uploadedBy?.name && <p className="text-xs text-neutral-400">Uploaded by: {sound.uploadedBy?.name}</p>}
       <audio controls src={soundUrl} controlsList="nodownload noplaybackrate" />
     </div>
   );
