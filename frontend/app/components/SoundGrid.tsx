@@ -6,11 +6,22 @@ import SoundComponent from "./Sound";
 import { getSounds } from "@/lib/sounds";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "next-auth/react";
+import { cn } from "@/lib/utils";
 
-export default function SoundGrid({ filter }: { filter?: "uploads" | "favorites" }) {
+export const getTotalPlayCount = (playedBy: Sound["playedBy"]) => {
+  return playedBy.reduce((acc, playedBy) => acc + playedBy?.times, 0);
+};
+
+export const getMostPlayedBy = (playedBy: Sound["playedBy"]) => {
+  // find the user with the most play count
+  return playedBy.reduce((prev, current) => (prev.times > current.times ? prev : current));
+}
+
+export default function SoundGrid({ filter }: { filter?: "uploads" | "favorites" | "leaderboard" }) {
   const session = useSession();
   const [sounds, setSounds] = useState<Sound[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [entrance, setEntrance] = useState("Happiest_man_in_Birmingham.mp3");
 
   useEffect(() => {
     setIsLoading(true);
@@ -28,6 +39,12 @@ export default function SoundGrid({ filter }: { filter?: "uploads" | "favorites"
               session?.data?.user?.id && sound?.favoritedBy?.includes(session?.data?.user?.id)
           );
         }
+        if (filter === "leaderboard") {
+          // find the total of playedby[{times}] for each sound and only show sounds with any play count
+          filteredSounds = filteredSounds.filter((sound) =>
+            sound.playedBy && getTotalPlayCount(sound.playedBy) > 0
+          );
+        }
         setSounds(filteredSounds);
       })
       .finally(() => {
@@ -35,7 +52,12 @@ export default function SoundGrid({ filter }: { filter?: "uploads" | "favorites"
       });
   }, [session?.data?.user?.id, filter]);
 
-  const sortedSounds = [...sounds].sort((a, b) => a.displayname.localeCompare(b.displayname));
+  const sortedSounds = [...sounds].sort((a, b) => {
+    if (filter === "leaderboard") {
+      return getTotalPlayCount(b.playedBy) - getTotalPlayCount(a.playedBy);
+    }
+    return a.displayname.localeCompare(b.displayname);
+  });
 
   if (isLoading) {
     return (
@@ -48,15 +70,19 @@ export default function SoundGrid({ filter }: { filter?: "uploads" | "favorites"
   }
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
-      {sortedSounds.map((sound) => (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(308px,1fr))] gap-4">
+      {sortedSounds.map((sound, i) => (
         <SoundComponent
           sound={sound}
           key={sound.filename}
+          entrance={sound.filename == entrance}
+          setEntrance={setEntrance}
           favorited={
             (session?.data?.user?.id && sound?.favoritedBy?.includes(session?.data?.user?.id)) ||
             false
           }
+          type={filter}
+          className={cn(i == 0 && filter === "leaderboard" && "border-gold", i == 1 && filter === "leaderboard" && "border-silver", i == 2 && filter === "leaderboard" && "border-bronze")}
         />
       ))}
       {sortedSounds.length === 0 && (

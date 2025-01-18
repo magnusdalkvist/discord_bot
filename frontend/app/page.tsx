@@ -16,6 +16,11 @@ export interface Sound {
     id: string;
     name: string;
   };
+  playedBy: {
+    id: string;
+    name: string;
+    times: number;
+  }[];
 }
 
 export default function Home() {

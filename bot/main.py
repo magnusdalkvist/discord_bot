@@ -28,8 +28,33 @@ async def on_ready():
     )
 
 
+def get_entrance_sound(member):
+    with open('sounds.json', 'r') as f:
+        sounds = json.load(f)
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+    # find the user in users.json and check for entrance_sound and then find the sound in sounds.json ["filename"]
+    for user in users:
+        if user["id"] == str(member.id):
+            if user["entrance_sound"]:
+                for sound in sounds:
+                    if sound["filename"] == user["entrance_sound"]:
+                        play_sound(sound["filename"])
+                        break
+            break
+
+
 @bot.event
 async def on_voice_state_update(member, before, after):
+    print(f"{member.id} has joined the voice channel")
+    vc = discord.utils.get(bot.voice_clients, guild=member.guild)
+    if after.channel:
+        if not vc:
+            await after.channel.connect()
+            print(f"Bot has joined the voice channel: {after.channel.name}")
+        print(f"Bot is connected to voice channel")
+        get_entrance_sound(member)
+    
     # Fetch the user object for your user ID
     user = await bot.fetch_user(config.USER_ID)
 
@@ -42,7 +67,6 @@ async def on_voice_state_update(member, before, after):
         if me and me.voice and me.voice.channel.id == config.OFFICE_CHANNEL_ID:
             await user.send(f"{member.name} has joined the waiting room.")
 
-    vc = discord.utils.get(bot.voice_clients, guild=member.guild)
     if vc and vc.channel and len(vc.channel.members) == 1:
         await vc.disconnect()
         if play_random_sounds.is_running():
@@ -321,6 +345,24 @@ class Buttons(discord.ui.View):
                     await interaction.user.voice.channel.connect()
                 print(f"{interaction.user.name} used soundboard")
                 play_sound(sound['filename'])
+                # add log to sound
+                with open('sounds.json', 'r') as f:
+                    sounds = json.load(f)
+                user_found = False
+                for s in sounds:
+                    if s['filename'] == sound['filename']:
+                        if 'playedBy' not in s:
+                            s['playedBy'] = []
+                        for user in s['playedBy']:
+                            if user["id"] == str(interaction.user.id):
+                                user["times"] += 1
+                                user_found = True
+                                break
+                        if not user_found:
+                            s['playedBy'].append({"id": str(interaction.user.id),"name": interaction.user.name, "times": 1})
+                        break
+                with open('sounds.json', 'w') as f:
+                    json.dump(sounds, f, indent=2)
                 await interaction.response.edit_message(view=self)
             except Exception as e:
                 await interaction.response.edit_message(content=f"Error: {e}")

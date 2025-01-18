@@ -47,3 +47,4 @@ bot/__pycache__
 bot/config.py
 bot/sounds.py
 bot/sounds.json
+bot/users.json

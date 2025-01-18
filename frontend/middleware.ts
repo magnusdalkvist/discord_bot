@@ -14,7 +14,9 @@ export default auth((req) => {
     return;
   }
 
-  if (!req.auth && pathname !== "/" && pathname !== "/soundboard") {
+  const allowedPaths = ["/", "/soundboard", "/soundboard/leaderboard"];
+
+  if (!req.auth && !allowedPaths.includes(pathname)) {
     const newUrl = new URL("/", req.nextUrl.origin);
     newUrl.searchParams.set("redirected", "unauth");
     return Response.redirect(newUrl);

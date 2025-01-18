@@ -30,3 +30,20 @@ export async function favoriteSound(
     return false;
   }
 }
+
+export async function entranceSound(
+  filename: string,
+  userId: string,
+): Promise<boolean> {
+  try {
+    const response = await fetch(`https://sarah.bils.space/api/sounds/entrance`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename, userId }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error("Error setting entrance sound:", error);
+    return false;
+  }
+}

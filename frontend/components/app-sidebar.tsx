@@ -31,6 +31,10 @@ const data = {
           url: "/soundboard",
         },
         {
+          title: "Leaderboard",
+          url: "/soundboard/leaderboard",
+        },
+        {
           title: "Favorites",
           url: "/soundboard/favorites",
         },

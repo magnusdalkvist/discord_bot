@@ -86,3 +86,49 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+
+.border-gold {
+  position: relative;
+  border: 4px solid transparent;
+}
+.border-gold::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  padding: 4px;
+  background: linear-gradient(to right bottom, #ffdf2b, #bfa200);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.border-silver {
+  position: relative;
+  border: 4px solid transparent;
+}
+.border-silver::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  padding: 4px;
+  background: linear-gradient(to right bottom, #cecece, #888888);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.border-bronze {
+  position: relative;
+  border: 4px solid transparent;
+}
+.border-bronze::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  padding: 4px;
+  background: linear-gradient(to right bottom, #f39c45, #804924);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
