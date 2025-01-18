@@ -19,8 +19,8 @@ export function TeamSwitcher() {
               asChild
             >
               <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Image src="/favicon.ico" className="size-6" alt="logo" width={24} height={24} priority/>
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
+                  <Image src="/favicon.ico" className="size-8" alt="logo" width={32} height={32} priority/>
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Fart Machine</span>

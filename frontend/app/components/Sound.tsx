@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { setEntranceSound, favoriteSound } from "@/lib/sounds";
 import debounce from "lodash.debounce";
 import { getMostPlayedBy, getTotalPlayCount } from "./SoundGrid";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Sound({
   sound,
@@ -91,16 +92,34 @@ export default function Sound({
       )}
     >
       <div className="absolute top-2 left-2 h-6 cursor-pointer flex gap-1">
-        <HeartIcon
-          size={20}
-          className={cn(favorite && "fill-red-400 text-red-400", "duration-100")}
-          onClick={handleFavorite}
-        />
-        <StarIcon
-          size={20}
-          className={cn(entrance && "fill-yellow-400 text-yellow-400", "duration-100")}
-          onClick={handleEntrance}
-        />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <HeartIcon
+                size={20}
+                className={cn(favorite && "fill-red-400 text-red-400", "duration-100")}
+                onClick={handleFavorite}
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Add to favorites</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <StarIcon
+                size={20}
+                className={cn(entrance && "fill-yellow-400 text-yellow-400", "duration-100")}
+                onClick={handleEntrance}
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Set as entrance sound</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
       <p className="absolute top-2 right-2 bg-neutral-600 text-white px-2 py-1 h-6 text-[10px] rounded-lg font-semibold uppercase">
         {sound.category}

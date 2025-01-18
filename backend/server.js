@@ -138,10 +138,6 @@ app.post("/api/sounds/entrance", (req, res) => {
   const users = JSON.parse(fs.readFileSync(USERS_FILE));
   const user = users.find((user) => user.id === userId);
 
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
-  }
-
   // check if user is in users.json. If not, add user. If yes, update users entrance sound to filename
   const userIndex = users.findIndex((user) => user.id === userId);
   if (userIndex === -1) {
