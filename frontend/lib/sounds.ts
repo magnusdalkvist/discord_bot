@@ -31,7 +31,19 @@ export async function favoriteSound(
   }
 }
 
-export async function entranceSound(
+export async function getEntranceSound(userId: string): Promise<{ entrance_sound: string} | undefined> {
+  try {
+    const response = await fetch(`https://sarah.bils.space/api/sounds/entrance?userId=${userId}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch entrance sound");
+    }
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching entrance sound:", error);
+  }
+}
+
+export async function setEntranceSound(
   filename: string,
   userId: string,
 ): Promise<boolean> {

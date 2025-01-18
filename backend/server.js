@@ -159,6 +159,27 @@ app.post("/api/sounds/entrance", (req, res) => {
   res.json({ message: "Entrance sound updated", sound });
 });
 
+app.get("/api/sounds/entrance", (req, res) => {
+  const { userId } = req.query;
+
+  if (!userId) {
+    return res.status(400).json({ message: "Invalid request data" });
+  }
+
+  if (!fs.existsSync(USERS_FILE)) {
+    return res.status(404).json({ message: "Users file not found" });
+  }
+
+  const users = JSON.parse(fs.readFileSync(USERS_FILE));
+  const user = users.find((user) => user.id === userId);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  res.json({ entrance_sound: user.entrance_sound });
+});
+
 // API Endpoint to Get Sounds List
 app.get("/api/sounds", (req, res) => {
   if (fs.existsSync(SOUNDS_FILE)) {

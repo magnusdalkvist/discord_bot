@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Sound } from "../page";
 import SoundComponent from "./Sound";
-import { getSounds } from "@/lib/sounds";
+import { getEntranceSound, getSounds } from "@/lib/sounds";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -15,41 +15,51 @@ export const getTotalPlayCount = (playedBy: Sound["playedBy"]) => {
 export const getMostPlayedBy = (playedBy: Sound["playedBy"]) => {
   // find the user with the most play count
   return playedBy.reduce((prev, current) => (prev.times > current.times ? prev : current));
-}
+};
 
-export default function SoundGrid({ filter }: { filter?: "uploads" | "favorites" | "leaderboard" }) {
+export default function SoundGrid({
+  filter,
+}: {
+  filter?: "uploads" | "favorites" | "leaderboard";
+}) {
   const session = useSession();
   const [sounds, setSounds] = useState<Sound[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [entrance, setEntrance] = useState("Happiest_man_in_Birmingham.mp3");
+  const [entrance, setEntrance] = useState("");
 
   useEffect(() => {
     setIsLoading(true);
-    getSounds()
-      .then((sounds) => {
-        let filteredSounds = sounds;
-        if (filter === "uploads") {
-          filteredSounds = filteredSounds.filter(
-            (sound) => session?.data?.user?.id && sound?.uploadedBy?.id === session?.data?.user?.id
-          );
-        }
-        if (filter === "favorites") {
-          filteredSounds = filteredSounds.filter(
-            (sound) =>
-              session?.data?.user?.id && sound?.favoritedBy?.includes(session?.data?.user?.id)
-          );
-        }
-        if (filter === "leaderboard") {
-          // find the total of playedby[{times}] for each sound and only show sounds with any play count
-          filteredSounds = filteredSounds.filter((sound) =>
-            sound.playedBy && getTotalPlayCount(sound.playedBy) > 0
-          );
-        }
-        setSounds(filteredSounds);
-      })
-      .finally(() => {
-        setTimeout(() => setIsLoading(false), 300);
+    if (session?.data?.user?.id) {
+      getSounds()
+        .then((sounds) => {
+          let filteredSounds = sounds;
+          if (filter === "uploads") {
+            filteredSounds = filteredSounds.filter(
+              (sound) =>
+                session?.data?.user?.id && sound?.uploadedBy?.id === session?.data?.user?.id
+            );
+          }
+          if (filter === "favorites") {
+            filteredSounds = filteredSounds.filter(
+              (sound) =>
+                session?.data?.user?.id && sound?.favoritedBy?.includes(session?.data?.user?.id)
+            );
+          }
+          if (filter === "leaderboard") {
+            // find the total of playedby[{times}] for each sound and only show sounds with any play count
+            filteredSounds = filteredSounds.filter(
+              (sound) => sound.playedBy && getTotalPlayCount(sound.playedBy) > 0
+            );
+          }
+          setSounds(filteredSounds);
+        })
+        .finally(() => {
+          setTimeout(() => setIsLoading(false), 300);
+        });
+      getEntranceSound(session?.data?.user?.id).then((entrance) => {
+        setEntrance(entrance?.entrance_sound || "");
       });
+    }
   }, [session?.data?.user?.id, filter]);
 
   const sortedSounds = [...sounds].sort((a, b) => {
@@ -82,7 +92,11 @@ export default function SoundGrid({ filter }: { filter?: "uploads" | "favorites"
             false
           }
           type={filter}
-          className={cn(i == 0 && filter === "leaderboard" && "border-gold", i == 1 && filter === "leaderboard" && "border-silver", i == 2 && filter === "leaderboard" && "border-bronze")}
+          className={cn(
+            i == 0 && filter === "leaderboard" && "border-gold",
+            i == 1 && filter === "leaderboard" && "border-silver",
+            i == 2 && filter === "leaderboard" && "border-bronze"
+          )}
         />
       ))}
       {sortedSounds.length === 0 && (

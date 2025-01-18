@@ -51,9 +51,9 @@ async def on_voice_state_update(member, before, after):
     if after.channel:
         if not vc:
             await after.channel.connect()
-            print(f"Bot has joined the voice channel: {after.channel.name}")
-        print(f"Bot is connected to voice channel")
-        get_entrance_sound(member)
+            get_entrance_sound(member)
+        if vc and vc.channel == after.channel:
+            get_entrance_sound(member)
     
     # Fetch the user object for your user ID
     user = await bot.fetch_user(config.USER_ID)

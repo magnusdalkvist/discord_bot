@@ -4,7 +4,7 @@ import type { Sound } from "../page";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
-import { entranceSound, favoriteSound } from "@/lib/sounds";
+import { setEntranceSound, favoriteSound } from "@/lib/sounds";
 import debounce from "lodash.debounce";
 import { getMostPlayedBy, getTotalPlayCount } from "./SoundGrid";
 
@@ -64,7 +64,7 @@ export default function Sound({
   const debouncedEntranceSound = useCallback(
     debounce(
       (filename: string, userId: string) => {
-        entranceSound(filename, userId);
+        setEntranceSound(filename, userId);
       },
       500,
       {
