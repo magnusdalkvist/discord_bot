@@ -48,7 +48,7 @@ def get_entrance_sound(member):
 async def on_voice_state_update(member, before, after):
     print(f"{member.id} has joined the voice channel")
     vc = discord.utils.get(bot.voice_clients, guild=member.guild)
-    if after.channel:
+    if after.channel and before.channel != after.channel:
         if not vc:
             await after.channel.connect()
             get_entrance_sound(member)

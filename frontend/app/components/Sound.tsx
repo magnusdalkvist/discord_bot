@@ -95,28 +95,38 @@ export default function Sound({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <HeartIcon
-                size={20}
-                className={cn(favorite && "fill-red-400 text-red-400", "duration-100")}
+              <button
                 onClick={handleFavorite}
-              />
+                disabled={!session?.data?.user?.id}
+                className="disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <HeartIcon
+                  size={20}
+                  className={cn(favorite && "fill-red-400 text-red-400", "duration-100")}
+                />
+              </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Add to favorites</p>
+              {session?.data?.user?.id ? "Add to favorites" : "Sign in to add to favorites"}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <StarIcon
-                size={20}
-                className={cn(entrance && "fill-yellow-400 text-yellow-400", "duration-100")}
+              <button
                 onClick={handleEntrance}
-              />
+                disabled={!session?.data?.user?.id}
+                className="disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <StarIcon
+                  size={20}
+                  className={cn(entrance && "fill-yellow-400 text-yellow-400", "duration-100")}
+                />
+              </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Set as entrance sound</p>
+              {session?.data?.user?.id ? "Set as entrance sound" : "Sign in to set as entrance sound"}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

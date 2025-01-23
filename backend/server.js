@@ -111,6 +111,15 @@ app.post("/api/sounds/favorite", (req, res) => {
     return res.status(404).json({ message: "Sound not found" });
   }
 
+  if (favorite) {
+    if (!sound.favoritedBy) {
+      sound.favoritedBy = [];
+    }
+    if (!sound.favoritedBy.includes(userId)) {
+      sound.favoritedBy.push(userId);
+    }
+  }
+
   fs.writeFileSync(SOUNDS_FILE, JSON.stringify(sounds, null, 2));
 
   res.json({ message: "Sound favorite status updated", sound });
@@ -136,7 +145,6 @@ app.post("/api/sounds/entrance", (req, res) => {
   }
 
   const users = JSON.parse(fs.readFileSync(USERS_FILE));
-  const user = users.find((user) => user.id === userId);
 
   // check if user is in users.json. If not, add user. If yes, update users entrance sound to filename
   const userIndex = users.findIndex((user) => user.id === userId);

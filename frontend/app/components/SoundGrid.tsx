@@ -29,33 +29,32 @@ export default function SoundGrid({
 
   useEffect(() => {
     setIsLoading(true);
+    getSounds()
+      .then((sounds) => {
+        let filteredSounds = sounds;
+        if (filter === "uploads") {
+          filteredSounds = filteredSounds.filter(
+            (sound) => session?.data?.user?.id && sound?.uploadedBy?.id === session?.data?.user?.id
+          );
+        }
+        if (filter === "favorites") {
+          filteredSounds = filteredSounds.filter(
+            (sound) =>
+              session?.data?.user?.id && sound?.favoritedBy?.includes(session?.data?.user?.id)
+          );
+        }
+        if (filter === "leaderboard") {
+          // find the total of playedby[{times}] for each sound and only show sounds with any play count
+          filteredSounds = filteredSounds.filter(
+            (sound) => sound.playedBy && getTotalPlayCount(sound.playedBy) > 0
+          );
+        }
+        setSounds(filteredSounds);
+      })
+      .finally(() => {
+        setTimeout(() => setIsLoading(false), 300);
+      });
     if (session?.data?.user?.id) {
-      getSounds()
-        .then((sounds) => {
-          let filteredSounds = sounds;
-          if (filter === "uploads") {
-            filteredSounds = filteredSounds.filter(
-              (sound) =>
-                session?.data?.user?.id && sound?.uploadedBy?.id === session?.data?.user?.id
-            );
-          }
-          if (filter === "favorites") {
-            filteredSounds = filteredSounds.filter(
-              (sound) =>
-                session?.data?.user?.id && sound?.favoritedBy?.includes(session?.data?.user?.id)
-            );
-          }
-          if (filter === "leaderboard") {
-            // find the total of playedby[{times}] for each sound and only show sounds with any play count
-            filteredSounds = filteredSounds.filter(
-              (sound) => sound.playedBy && getTotalPlayCount(sound.playedBy) > 0
-            );
-          }
-          setSounds(filteredSounds);
-        })
-        .finally(() => {
-          setTimeout(() => setIsLoading(false), 300);
-        });
       getEntranceSound(session?.data?.user?.id).then((entrance) => {
         setEntrance(entrance?.entrance_sound || "");
       });
