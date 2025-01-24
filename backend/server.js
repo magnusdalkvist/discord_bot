@@ -82,7 +82,6 @@ app.post("/api/upload", upload.single("audio"), (req, res) => {
     filename: sanitizedFilename,
     displayname: displayname,
     category: "default",
-    favorite: false,
     uploadedBy: JSON.parse(uploadedBy),
   };
   sounds.push(newSound);
