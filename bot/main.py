@@ -7,6 +7,7 @@ import config
 import os
 import asyncio
 import json
+import requests
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 chance = 50
@@ -27,6 +28,7 @@ async def on_ready():
         activity=discord.CustomActivity(name="Playing Baldur's Gate 3")
     )
 
+    get_lol_data.start()
 
 def get_entrance_sound(member):
     with open('sounds.json', 'r') as f:
@@ -46,9 +48,9 @@ def get_entrance_sound(member):
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    print(f"{member.id} has joined the voice channel")
     vc = discord.utils.get(bot.voice_clients, guild=member.guild)
     if after.channel and before.channel != after.channel:
+        print(f"{member.id} has joined the voice channel")
         if not vc:
             await after.channel.connect()
             get_entrance_sound(member)
@@ -133,13 +135,13 @@ async def nick(
         )
 
 
-command_group = discord.app_commands.Group(
+sound_group = discord.app_commands.Group(
     name="sound", description="Play sound effects"
 )
-bot.tree.add_command(command_group)
+bot.tree.add_command(sound_group)
 
 
-@command_group.command(name="force", description="Play a random sound effect")
+@sound_group.command(name="force", description="Play a random sound effect")
 async def sound(interaction: discord.Interaction):
     print(f"{interaction.user.name} played a random sound effect")
     vc = discord.utils.get(bot.voice_clients)
@@ -156,7 +158,7 @@ async def sound(interaction: discord.Interaction):
         )
 
 
-@command_group.command(name="toggle", description="Toggle random sound effects")
+@sound_group.command(name="toggle", description="Toggle random sound effects")
 async def toggle_random_sound(interaction: discord.Interaction):
     if play_random_sounds.is_running():
         print("Stopping random sounds")
@@ -175,7 +177,7 @@ async def toggle_random_sound(interaction: discord.Interaction):
     )
 
 
-@command_group.command(
+@sound_group.command(
     name="interval", description="Set the interval for random sound effects"
 )
 @app_commands.describe(interval="The interval in seconds")
@@ -198,7 +200,7 @@ async def set_interval(interaction: discord.Interaction, interval: int):
         )
 
 
-@command_group.command(
+@sound_group.command(
     name="chance",
     description="Set the chance for random sound effects to play on each interval",
 )
@@ -389,6 +391,78 @@ async def soundboard(interaction: discord.Interaction):
     )
 
 
+lol_group = discord.app_commands.Group(
+    name="lol", description="League of Legends commands"
+)
+bot.tree.add_command(lol_group)
+
+
+@lol_group.command(name="add", description="Add a League of Legends account to track")
+@app_commands.describe(account="Riot ID (e.g. Summoner#1234)", user="Discord user connected to the account")
+async def add_lol_account(
+    interaction: discord.Interaction,
+    account: str,
+    user: discord.Member,
+):
+    with open('lolUsers.json', 'r') as f:
+        lol_users = json.load(f)
+    for user_entry in lol_users:
+        if user_entry["discord_id"] == str(user.id):
+            await interaction.response.send_message(
+                f"{user.name} already has an account linked.", ephemeral=True, delete_after=10
+            )
+            return
+        if user_entry["account"].lower() == account.lower():
+            await interaction.response.send_message(
+                f"{account} is already being tracked.", ephemeral=True, delete_after=10
+            )
+            return
+    lol_users.append({"account": account, "discord_id": str(user.id)})
+    with open('lolUsers.json', 'w') as f:
+        json.dump(lol_users, f, indent=2)
+    await interaction.response.send_message(
+        f"Added {account} for {user.name}", ephemeral=True, delete_after=10
+    )
+
+
+async def lol_list_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    with open('lolUsers.json', 'r') as f:
+        lol_users = json.load(f)
+    return [
+        app_commands.Choice(name=user["account"], value=user["account"])
+        for user in lol_users if current.lower() in user["account"].lower()
+    ]
+
+
+@lol_group.command(name="remove", description="Remove a League of Legends account")
+@app_commands.autocomplete(account=lol_list_autocomplete)
+async def remove_lol_account(interaction: discord.Interaction, account: str):
+    with open('lolUsers.json', 'r') as f:
+        lol_users = json.load(f)
+    for user in lol_users:
+        if user["account"] == account:
+            lol_users.remove(user)
+            break
+    with open('lolUsers.json', 'w') as f:
+        json.dump(lol_users, f, indent=2)
+    await interaction.response.send_message(
+        f"Removed {account}", ephemeral=True, delete_after=10
+    )
+
+
+@lol_group.command(name="list", description="List all tracked League of Legends accounts")
+async def list_lol_accounts(interaction: discord.Interaction):
+    with open('lolUsers.json', 'r') as f:
+        lol_users = json.load(f)
+    accounts = "\n".join([f"{user['account']}" for user in lol_users])
+    await interaction.response.send_message(
+        f"Tracked accounts:\n{accounts}", ephemeral=True, delete_after=30
+    )
+
+
 # TASKS
 @tasks.loop(seconds=60)
 async def play_random_sounds():
@@ -400,6 +474,15 @@ async def play_random_sounds():
             play_sound()
         except Exception as e:
             print(f"Error playing sound effect: {e}")
+
+
+@tasks.loop(seconds=120)
+async def get_lol_data():
+    print("Checking League of Legends match streaks...")
+    with open('lolUsers.json', 'r') as f:
+        lol_users = json.load(f)
+    for user in lol_users:
+        await check_match_streak(user)
 
 
 # Functions
@@ -417,6 +500,64 @@ def play_sound(sound: str = None):
     elif not vc or not vc.is_connected():
         play_random_sounds.cancel()
         raise Exception("Not connected to a voice channel")
+
+
+async def check_match_streak(user):
+    riot_name, riot_tag = user["account"].split("#")
+    # print(f"Getting data from the League of Legends API for user: {user['account']}")
+    try:
+        # Fetch the puuid
+        response = requests.get(
+            f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{riot_name}/{riot_tag}",
+            params={"api_key": config.LOL_API_KEY}
+        )
+        response.raise_for_status()
+        puuid = response.json()["puuid"]
+
+        # Fetch the match IDs
+        response = requests.get(
+            f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids",
+            params={"queueId": 420, "count": 2, "api_key": config.LOL_API_KEY}
+        )
+        response.raise_for_status()
+        match_ids = response.json()
+
+        # Fetch match details for each match ID
+        win_statuses = []
+        for match_id in match_ids:
+            response = requests.get(
+                f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id}",
+                params={"api_key": config.LOL_API_KEY}
+            )
+            response.raise_for_status()
+            match_details = response.json()
+            participants = match_details["info"]["participants"]
+            for participant in participants:
+                if participant["puuid"] == puuid:
+                    win_statuses.append(participant["win"])
+                    break
+
+        # Check the win/loss streak and update the nickname
+        guild = bot.get_guild(476435508638253056)
+        member = guild.get_member(int(user["discord_id"]))
+        if member:
+            new_nick = member.display_name
+            if len(win_statuses) == 2:
+                if all(win_statuses):
+                    if "(win streak)" not in new_nick:
+                        new_nick = new_nick.replace("(loss streak)", "").strip() + " (win streak)"
+                elif not any(win_statuses):
+                    if "(loss streak)" not in new_nick:
+                        new_nick = new_nick.replace("(win streak)", "").strip() + " (loss streak)"
+                else:
+                    new_nick = new_nick.replace("(win streak)", "").replace("(loss streak)", "").strip()
+                
+                if new_nick != member.display_name:
+                    await member.edit(nick=new_nick)
+                    print(f"Updated {member.name} nickname to: {new_nick}")
+
+    except requests.RequestException as e:
+        print(f"Error fetching data from the League of Legends API: {e}")
 
 
 bot.run(config.TOKEN)
