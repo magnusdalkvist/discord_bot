@@ -37,8 +37,28 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage, limits: { fileSize: 1 * 1024 * 1024 } });
 
+// API Endpoint to Get Sounds List
+app.get("/api/sounds", (req, res) => {
+  if (fs.existsSync(SOUNDS_FILE)) {
+    const sounds = JSON.parse(fs.readFileSync(SOUNDS_FILE));
+    res.json(sounds);
+  } else {
+    res.json([]);
+  }
+});
+
+// API Endpoint to Get Sound File
+app.get("/api/sounds/:filename", (req, res) => {
+  const soundPath = path.join(SOUND_DIR, req.params.filename);
+  if (fs.existsSync(soundPath)) {
+    res.sendFile(soundPath);
+  } else {
+    res.status(404).json({ message: "File not found" });
+  }
+});
+
 // API Endpoint to Upload an Audio File with Display Name
-app.post("/api/upload", upload.single("audio"), (req, res) => {
+app.post("/api/sounds/upload", upload.single("audio"), (req, res) => {
   const { displayname, uploadedBy } = req.body;
 
   if (!req.file) {
@@ -53,7 +73,7 @@ app.post("/api/upload", upload.single("audio"), (req, res) => {
   }
 
   if (!displayname) {
-    return res.status(400).json({ message: "No display name provided" });
+    return res.status(400).json({ message: "No name provided" });
   }
 
   // Update sounds.json
@@ -75,7 +95,7 @@ app.post("/api/upload", upload.single("audio"), (req, res) => {
     (sound) => sound.displayname.trim() === displayname.trim()
   );
   if (duplicateDisplayname) {
-    return res.status(400).json({ message: "Display name already exists" });
+    return res.status(400).json({ message: "Name already exists" });
   }
 
   const newSound = {
@@ -91,9 +111,94 @@ app.post("/api/upload", upload.single("audio"), (req, res) => {
   res.json({ message: "File uploaded successfully", sound: newSound });
 });
 
+// API Endpoint to Delete an Audio File
+app.delete("/api/sounds/:filename", (req, res) => {
+  const { filename } = req.params;
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: "No user id provided" });
+  }
+
+  if (!filename) {
+    return res.status(400).json({ message: "No filename provided" });
+  }
+
+  if (!fs.existsSync(SOUNDS_FILE)) {
+    return res.status(404).json({ message: "Sounds file not found" });
+  }
+
+  const sounds = JSON.parse(fs.readFileSync(SOUNDS_FILE));
+  const soundIndex = sounds.findIndex((sound) => sound.filename === filename);
+
+  if (soundIndex === -1) {
+    return res.status(404).json({ message: "Sound not found" });
+  }
+
+  if (sounds[soundIndex].uploadedBy.id !== userId) {
+    return res.status(403).json({ message: "You are not authorized to delete this file" });
+  }
+
+  sounds.splice(soundIndex, 1);
+  fs.writeFileSync(SOUNDS_FILE, JSON.stringify(sounds, null, 2));
+
+  const soundPath = path.join(SOUND_DIR, filename);
+  if (fs.existsSync(soundPath)) {
+    fs.unlinkSync(soundPath);
+  }
+
+  res.json({ message: "File deleted successfully" });
+});
+
+// API Endpoint to Edit Sound
+app.put("/api/sounds/:filename", upload.none(), (req, res) => {
+  const { filename } = req.params;
+  const { displayname, category, userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: "No user id provided" });
+  }
+
+  if (!filename) {
+    return res.status(400).json({ message: "No filename provided" });
+  }
+
+  if (!displayname && !category) {
+    return res.status(400).json({ message: "No data provided to update" });
+  }
+
+  if (!fs.existsSync(SOUNDS_FILE)) {
+    return res.status(404).json({ message: "Sounds file not found" });
+  }
+
+  const sounds = JSON.parse(fs.readFileSync(SOUNDS_FILE));
+  const sound = sounds.find((sound) => sound.filename === filename);
+
+  if (!sound) {
+    return res.status(404).json({ message: "Sound not found" });
+  }
+
+  if (sound.uploadedBy.id !== userId) {
+    return res.status(403).json({ message: "You are not authorized to update this file" });
+  }
+
+  if (displayname) {
+    sound.displayname = displayname;
+  }
+
+  if (category) {
+    sound.category = category;
+  }
+
+  fs.writeFileSync(SOUNDS_FILE, JSON.stringify(sounds, null, 2));
+
+  res.json({ message: "Sound updated successfully", sound });
+});
+
 // API Endpoint to Favorite/Unfavorite a Sound
-app.post("/api/sounds/favorite", (req, res) => {
-  const { filename, userId, favorite } = req.body;
+app.put(`/api/users/:userId/favorites/:filename`, (req, res) => {
+  const { favorite } = req.body;
+  const { filename, userId } = req.params;
 
   if (!filename || !userId || typeof favorite !== "boolean") {
     return res.status(400).json({ message: "Invalid request data" });
@@ -117,6 +222,13 @@ app.post("/api/sounds/favorite", (req, res) => {
     if (!sound.favoritedBy.includes(userId)) {
       sound.favoritedBy.push(userId);
     }
+  } else {
+    if (sound.favoritedBy) {
+      const index = sound.favoritedBy.indexOf(userId);
+      if (index !== -1) {
+        sound.favoritedBy.splice(index, 1);
+      }
+    }
   }
 
   fs.writeFileSync(SOUNDS_FILE, JSON.stringify(sounds, null, 2));
@@ -125,8 +237,9 @@ app.post("/api/sounds/favorite", (req, res) => {
 });
 
 // API Endpoint to set a Sound as Entrance Sound
-app.post("/api/sounds/entrance", (req, res) => {
-  const { filename, userId } = req.body;
+app.put(`/api/users/:userId/entrance`, (req, res) => {
+  const { filename } = req.body;
+  const { userId } = req.params;
 
   if (!filename || !userId) {
     return res.status(400).json({ message: "Invalid request data" });
@@ -162,8 +275,9 @@ app.post("/api/sounds/entrance", (req, res) => {
   res.json({ message: "Entrance sound updated", sound });
 });
 
-app.get("/api/sounds/entrance", (req, res) => {
-  const { userId } = req.query;
+// API Endpoint to Get User's Entrance Sound
+app.get(`/api/users/:userId/entrance`, (req, res) => {
+  const { userId } = req.params;
 
   if (!userId) {
     return res.status(400).json({ message: "Invalid request data" });
@@ -181,26 +295,6 @@ app.get("/api/sounds/entrance", (req, res) => {
   }
 
   res.json({ entrance_sound: user.entrance_sound });
-});
-
-// API Endpoint to Get Sounds List
-app.get("/api/sounds", (req, res) => {
-  if (fs.existsSync(SOUNDS_FILE)) {
-    const sounds = JSON.parse(fs.readFileSync(SOUNDS_FILE));
-    res.json(sounds);
-  } else {
-    res.json([]);
-  }
-});
-
-// API Endpoint to Get Sound File
-app.get("/api/sounds/:filename", (req, res) => {
-  const soundPath = path.join(SOUND_DIR, req.params.filename);
-  if (fs.existsSync(soundPath)) {
-    res.sendFile(soundPath);
-  } else {
-    res.status(404).json({ message: "File not found" });
-  }
 });
 
 // Start Server

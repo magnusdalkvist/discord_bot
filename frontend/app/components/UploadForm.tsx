@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { uploadSound } from "@/lib/sounds";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -52,7 +53,6 @@ const formSchema = z.object({
         message: `File must be less than 1MB`,
       }
     )
-    .optional(),
 });
 
 export default function UploadForm({ setOpen }: { setOpen?: (open: boolean) => void }) {
@@ -78,11 +78,7 @@ export default function UploadForm({ setOpen }: { setOpen?: (open: boolean) => v
     }));
 
     try {
-      const response = await fetch("https://sarah.bils.space/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
+      const response = await uploadSound(formData);
       if (response.ok) {
         form.reset();
         if (setOpen) setOpen(false);
