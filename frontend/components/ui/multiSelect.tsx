@@ -18,19 +18,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 export function MultiSelect({
   categories,
   users,
-  onSelect,
+  selectedItems,
+  setSelectedItems,
 }: {
   categories: { label: string; value: string }[];
   users: { label: string; value: string }[];
-  onSelect?: (selectedItems: { type: "category" | "user"; value: string }[]) => void;
+  selectedItems: { type: "category" | "user"; value: string }[];
+  setSelectedItems: React.Dispatch<React.SetStateAction<{ type: "category" | "user"; value: string }[]>>;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [selectedItems, setSelectedItems] = React.useState<
-    { type: "category" | "user"; value: string }[]
-  >([]);
-  React.useEffect(() => {
-    onSelect?.(selectedItems);
-  }, [selectedItems, onSelect]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -42,7 +38,7 @@ export function MultiSelect({
           className="w-[200px] justify-between"
         >
           {selectedItems.length > 0
-            ? `${selectedItems.length} ${selectedItems.length > 1 ? "filters" : "filter"}`
+            ? `${selectedItems.length} ${selectedItems.length > 1 ? "filters" : "filter"} selected`
             : "Select filters..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>

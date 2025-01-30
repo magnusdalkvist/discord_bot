@@ -100,7 +100,8 @@ export default function SoundGrid({
         sorted = sorted.sort((a, b) => a.displayname.localeCompare(b.displayname));
     }
     setSortedSounds(sorted);
-  }, [sounds, filter]);
+    setPage(1);
+  }, [sounds, filter, filters]);
 
   if (isLoading) {
     return (
@@ -156,6 +157,7 @@ export default function SoundGrid({
                   sorted = sorted.sort((a, b) => a.displayname.localeCompare(b.displayname));
               }
               setSortedSounds(sorted);
+              setPage(1);
             }}
           >
             <SelectTrigger className="w-min gap-2 max-[945px]:flex-1">
@@ -169,9 +171,8 @@ export default function SoundGrid({
             </SelectContent>
           </Select>
           <MultiSelect
-            onSelect={(selectedItems) => {
-              setFilters(selectedItems);
-            }}
+            selectedItems={filters}
+            setSelectedItems={setFilters}
             categories={
               //get all categories from sounds and remove duplicates
               [...new Set(sounds.map((sound) => sound.category))].map((category) => ({
@@ -192,7 +193,10 @@ export default function SoundGrid({
               placeholder="Search sounds..."
               className="placeholder:text-sm flex-1 min-w-[150px] max-w-full"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
             {session?.data?.user && <UploadDialog />}
           </div>
