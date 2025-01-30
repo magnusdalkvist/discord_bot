@@ -60,13 +60,15 @@ export async function favoriteSound(
   userId: string,
   favorite: boolean
 ): Promise<boolean> {
-  console.log("favoriteSound", filename, userId, favorite);
   try {
-    const response = await fetch(`https://sarah.bils.space/api/users/${userId}/favorites/${filename}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ favorite }),
-    });
+    const response = await fetch(
+      `https://sarah.bils.space/api/users/${userId}/favorites/${filename}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ favorite }),
+      }
+    );
     return response.ok;
   } catch (error) {
     console.error("Error favoriting sound:", error);

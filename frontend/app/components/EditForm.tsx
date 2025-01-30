@@ -77,7 +77,6 @@ export default function EditForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        onChange={() => setError(null)}
         className="w-full space-y-2 flex flex-col"
       >
         <FormField
@@ -88,7 +87,16 @@ export default function EditForm({
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder={sound.displayname} {...field} />
+                  <Input
+                    type="text"
+                    placeholder={sound.displayname}
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setError(null);
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -96,7 +104,7 @@ export default function EditForm({
           }}
         />
         <Button type="submit" className="">
-          Save
+          Save changes
         </Button>
         {error && <p className="text-red-500 text-sm">Error while editing: {error}</p>}
       </form>

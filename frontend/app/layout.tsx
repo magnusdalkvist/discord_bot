@@ -15,7 +15,6 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { Toaster } from "@/components/ui/toaster";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
-import UploadDialog from "./components/UploadDialog";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -73,11 +72,8 @@ export default async function RootLayout({
                                     </>
                                     )} */}
                 </div>
-                <div className="flex items-center gap-2 px-4">
-                  {session?.user && <UploadDialog />}
-                </div>
               </header>
-              <div className="flex flex-1 flex-col p-4 pt-0">
+              <div className="flex flex-1 flex-col p-4 pt-0 container mx-auto">
                 {children}
                 <Toaster />
               </div>
