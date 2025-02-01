@@ -15,7 +15,7 @@ export default auth((req) => {
   }
 
   const allowedPaths = ["/"];
-  const allowedGuilds = ["476435508638253asd056"]
+  const allowedGuilds = ["476435508638253056"]
 
   const guild = req?.auth?.user?.guilds?.find((guild: {id: string}) => allowedGuilds.includes(guild.id));
   console.log(guild);
