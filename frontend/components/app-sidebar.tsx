@@ -16,10 +16,23 @@ import {
 import { SessionProvider } from "next-auth/react";
 import { TeamSwitcher } from "./team-switcher";
 import { User } from "next-auth";
+import { DiscordLogoIcon } from "@radix-ui/react-icons";
 
 // This is sample data.
 const data = {
   navMain: [
+    {
+      title: "Discord",
+      url: "/discord",
+      icon: DiscordLogoIcon,
+      isActive: true,
+      items: [
+        {
+          title: "Activity",
+          url: "/discord/activity",
+        },
+      ],
+    },
     {
       title: "Soundboard",
       url: "/soundboard",
