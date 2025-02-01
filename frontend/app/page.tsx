@@ -39,6 +39,20 @@ export default function Home() {
         toast({
           title: "Unauthorized",
           description: "You must be logged in to access this page.",
+          duration: 5000,
+          
+        });
+      }, 0);
+
+      router.replace("/");
+    } else if (redirected === "unauth-guild") {
+      console.log("Unauthorized Guild");
+
+      setTimeout(() => {
+        toast({
+          title: "Unauthorized",
+          description: "You must be a member of the correct guild to access this page. If you believe this is an error, please sign out and sign back in.",
+          duration: 7000
         });
       }, 0);
 
