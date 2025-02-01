@@ -1,5 +1,4 @@
-import NextAuth from "next-auth";
-import { DefaultSession } from "next-auth";
+import NextAuth from "next-auth"
 import Discord from "next-auth/providers/discord";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -9,17 +8,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, account, user, profile }) {
+    async jwt({ token, account, profile }) {
       if (account) {
         token.accessToken = account.access_token;
         token.id = profile?.id;
         token.email = profile?.email;
         token.profile = profile;
-        token.guilds = await fetch("https://discord.com/api/v6/users/@me/guilds", {
-          headers: {
-            Authorization: `Bearer ${account.access_token}`,
-          },
-        }).then((res) => res.json());
       }
       return token;
     },
@@ -30,7 +24,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         id: token.id as string,
         image: token.picture,
         emailVerified: null,
-        guilds: token.guilds,
       };
       return session;
     },
@@ -40,15 +33,3 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
 });
-
-declare module "next-auth" {
-  interface Session {
-    user: {
-      guilds: any;
-    } & DefaultSession["user"];
-  }
-  
-  interface User {
-    guilds?: any;
-  }
-}
