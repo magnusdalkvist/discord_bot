@@ -171,7 +171,13 @@ export function SoundActivityChart() {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <BarChart accessibilityLayer>
+          <BarChart
+            accessibilityLayer
+            data={chartData.map((entry) => ({
+              ...entry,
+              fill: "var(--color-soundCount)",
+            }))}
+          >
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="timestamp"
@@ -202,7 +208,7 @@ export function SoundActivityChart() {
                 />
               }
             />
-            <Bar dataKey="soundCount" fill="var(--color-soundCount)" radius={4} />
+            <Bar dataKey="soundCount" fill="fill" radius={4} />
           </BarChart>
         </ChartContainer>
       </CardContent>
