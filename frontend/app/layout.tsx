@@ -2,19 +2,12 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppSidebar } from "@/components/app-sidebar";
-// import {
-//   Breadcrumb,
-//   BreadcrumbItem,
-//   BreadcrumbLink,
-//   BreadcrumbList,
-//   BreadcrumbPage,
-//   BreadcrumbSeparator,
-// } from "@/components/ui/breadcrumb";
-// import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ModeToggle } from "@/components/ui/mode-toggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,47 +31,26 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SessionProvider>
-          <SidebarProvider>
-            <AppSidebar user={session?.user} />
-            <SidebarInset>
-              <header className="flex justify-between h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                <div className="flex items-center gap-2 px-4">
-                  <SidebarTrigger className="-ml-1" />
-                  {/* {breadcrumbs && (
-                                <>
-                                <Separator orientation="vertical" className="mr-2 h-4" />
-                                <Breadcrumb>
-                                <BreadcrumbList>
-                                {breadcrumbs[0] && (
-                                  <BreadcrumbItem className="hidden md:block">
-                                  <BreadcrumbLink href={`/${breadcrumbs[0]}`}>
-                                  {breadcrumbs[0]}
-                                  </BreadcrumbLink>
-                                  </BreadcrumbItem>
-                                  )}
-                                  {breadcrumbs[1] && (
-                                    <>
-                                    <BreadcrumbSeparator className="hidden md:block" />
-                                    <BreadcrumbItem>
-                                    <BreadcrumbPage>{breadcrumbs[1]}</BreadcrumbPage>
-                                    </BreadcrumbItem>
-                                    </>
-                                    )}
-                                    </BreadcrumbList>
-                                    </Breadcrumb>
-                                    </>
-                                    )} */}
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <SidebarProvider>
+              <AppSidebar user={session?.user} />
+              <SidebarInset>
+                <header className="flex justify-between h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+                  <div className="flex items-center justify-between w-full gap-2 px-4">
+                    <SidebarTrigger className="-ml-1" />
+                    <ModeToggle />
+                  </div>
+                </header>
+                <div className="flex flex-1 flex-col p-4 pt-0 container mx-auto">
+                  {children}
+                  <Toaster />
                 </div>
-              </header>
-              <div className="flex flex-1 flex-col p-4 pt-0 container mx-auto">
-                {children}
-                <Toaster />
-              </div>
-            </SidebarInset>
-          </SidebarProvider>
+              </SidebarInset>
+            </SidebarProvider>
+          </ThemeProvider>
         </SessionProvider>
       </body>
     </html>

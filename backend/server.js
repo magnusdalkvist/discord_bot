@@ -11,6 +11,7 @@ const PORT = 4000; // Change if needed
 const SOUND_DIR = path.join(__dirname, "../bot/sounds/");
 const SOUNDS_FILE = path.join(__dirname, "../bot/sounds.json");
 const USERS_FILE = path.join(__dirname, "../bot/users.json");
+const LOGS_FILE = path.join(__dirname, "../bot/logs.json");
 
 // Enable CORS
 app.use(cors());
@@ -295,6 +296,11 @@ app.get(`/api/users/:userId/entrance`, (req, res) => {
   }
 
   res.json({ entrance_sound: user.entrance_sound });
+});
+
+app.get("/api/logs", (req, res) => {
+  const logs = JSON.parse(fs.readFileSync(LOGS_FILE));
+  res.json(logs);
 });
 
 // Start Server

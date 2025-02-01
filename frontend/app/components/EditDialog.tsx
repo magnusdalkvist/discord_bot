@@ -8,8 +8,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Sound } from "../page";
 import EditForm from "./EditForm";
+import { Sound } from "@/lib/sounds";
 
 export default function EditDialog({sound}: {sound: Sound}) {
   const [open, setOpen] = useState(false);

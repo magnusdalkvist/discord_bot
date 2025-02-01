@@ -10,14 +10,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { editSound } from "@/lib/sounds";
+import { editSound, Sound } from "@/lib/sounds";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Sound } from "../page";
 
 const formSchema = z.object({
   displayname: z

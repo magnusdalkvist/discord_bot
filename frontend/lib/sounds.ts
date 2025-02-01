@@ -1,4 +1,19 @@
-import { Sound } from "@/app/page";
+export interface Sound {
+  filename: string;
+  displayname: string;
+  category: string;
+  favorite: boolean;
+  favoritedBy: string[];
+  uploadedBy: {
+    id: string;
+    name: string;
+  };
+  playedBy: {
+    id: string;
+    name: string;
+    times: number;
+  }[];
+}
 
 export async function getSounds(): Promise<Sound[]> {
   try {

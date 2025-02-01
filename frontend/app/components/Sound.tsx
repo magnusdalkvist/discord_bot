@@ -1,10 +1,9 @@
 "use client";
 import { HeartIcon, StarIcon } from "lucide-react";
-import type { Sound } from "../page";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
-import { setEntranceSound, favoriteSound, deleteSound } from "@/lib/sounds";
+import { setEntranceSound, favoriteSound, deleteSound, type Sound } from "@/lib/sounds";
 import debounce from "lodash.debounce";
 import { getMostPlayedBy, getTotalPlayCount } from "./SoundGrid";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -108,7 +107,7 @@ export default function Sound({
       <ContextMenuTrigger
         key={sound.filename}
         className={cn(
-          "min-h-[150px] flex flex-col items-center justify-center p-4 pt-10 bg-[#f1f3f4] rounded-lg text-black relative",
+          "min-h-[150px] flex flex-col items-center justify-center p-4 pt-10 bg-[#f1f3f4] dark:bg-[#3b3b3b] rounded-lg relative",
           className
         )}
       >
@@ -165,7 +164,7 @@ export default function Sound({
         </p>
         <p className="font-bold">{sound.displayname}</p>
         {type === "leaderboard" ? (
-          <p className="text-xs text-neutral-500 text-center">
+          <p className="text-xs text-muted-foreground/75 text-center">
             Total plays: {getTotalPlayCount(sound?.playedBy)}
             <br />
             Most plays: {getMostPlayedBy(sound?.playedBy).name} (
@@ -173,7 +172,7 @@ export default function Sound({
           </p>
         ) : (
           sound.uploadedBy?.name && (
-            <p className="text-xs text-neutral-500 text-center">
+            <p className="text-xs text-muted-foreground/75 text-center">
               Uploaded by: {sound.uploadedBy?.name}
             </p>
           )
@@ -190,7 +189,12 @@ export default function Sound({
         {sound.uploadedBy?.id == session?.data?.user?.id && (
           <>
             <ContextMenuSeparator />
-            <ContextMenuItem disabled={sound?.uploadedBy?.id != session?.data?.user?.id} onSelect={(e)=>{e.preventDefault()}}>
+            <ContextMenuItem
+              disabled={sound?.uploadedBy?.id != session?.data?.user?.id}
+              onSelect={(e) => {
+                e.preventDefault();
+              }}
+            >
               <EditDialog sound={sound} />
             </ContextMenuItem>
             <ContextMenuItem

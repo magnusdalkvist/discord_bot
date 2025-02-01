@@ -8,6 +8,7 @@ import os
 import asyncio
 import json
 import requests
+import time
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 chance = 50
@@ -28,26 +29,14 @@ async def on_ready():
         activity=discord.CustomActivity(name="Playing Baldur's Gate 3")
     )
 
-    get_lol_data.start()
-
-def get_entrance_sound(member):
-    with open('sounds.json', 'r') as f:
-        sounds = json.load(f)
-    with open('users.json', 'r') as f:
-        users = json.load(f)
-    # find the user in users.json and check for entrance_sound and then find the sound in sounds.json ["filename"]
-    for user in users:
-        if user["id"] == str(member.id):
-            if user["entrance_sound"]:
-                for sound in sounds:
-                    if sound["filename"] == user["entrance_sound"]:
-                        play_sound(sound["filename"])
-                        break
-            break
+    if not get_lol_data.is_running():
+        get_lol_data.start()
 
 
 @bot.event
 async def on_voice_state_update(member, before, after):
+    if member.id != bot.user.id:
+        updateLog(member, before, after)
     vc = discord.utils.get(bot.voice_clients, guild=member.guild)
     if after.channel and before.channel != after.channel:
         print(f"{member.id} has joined the voice channel")
@@ -97,7 +86,6 @@ async def join(interaction: discord.Interaction):
 async def leave(interaction: discord.Interaction):
     channel = interaction.user.voice.channel
     try:
-        play_sound()
         await channel.guild.voice_client.disconnect()
         await interaction.response.send_message(
             "Left the voice channel", ephemeral=True, delete_after=10
@@ -346,25 +334,7 @@ class Buttons(discord.ui.View):
                 ):
                     await interaction.user.voice.channel.connect()
                 print(f"{interaction.user.name} used soundboard")
-                play_sound(sound['filename'])
-                # add log to sound
-                with open('sounds.json', 'r') as f:
-                    sounds = json.load(f)
-                user_found = False
-                for s in sounds:
-                    if s['filename'] == sound['filename']:
-                        if 'playedBy' not in s:
-                            s['playedBy'] = []
-                        for user in s['playedBy']:
-                            if user["id"] == str(interaction.user.id):
-                                user["times"] += 1
-                                user_found = True
-                                break
-                        if not user_found:
-                            s['playedBy'].append({"id": str(interaction.user.id),"name": interaction.user.name, "times": 1})
-                        break
-                with open('sounds.json', 'w') as f:
-                    json.dump(sounds, f, indent=2)
+                play_sound(sound['filename'], interaction.user)
                 await interaction.response.edit_message(view=self)
             except Exception as e:
                 await interaction.response.edit_message(content=f"Error: {e}")
@@ -476,7 +446,7 @@ async def play_random_sounds():
             print(f"Error playing sound effect: {e}")
 
 
-@tasks.loop(seconds=120)
+@tasks.loop(seconds=300)
 async def get_lol_data():
     print("Checking League of Legends match streaks...")
     with open('lolUsers.json', 'r') as f:
@@ -486,7 +456,23 @@ async def get_lol_data():
 
 
 # Functions
-def play_sound(sound: str = None):
+def get_entrance_sound(member: discord.Member):
+    with open('sounds.json', 'r') as f:
+        sounds = json.load(f)
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+    # find the user in users.json and check for entrance_sound and then find the sound in sounds.json ["filename"]
+    for user in users:
+        if user["id"] == str(member.id):
+            if user["entrance_sound"]:
+                for sound in sounds:
+                    if sound["filename"] == user["entrance_sound"]:
+                        play_sound(sound["filename"], member)
+                        break
+            break
+
+
+def play_sound(sound: str = None, member: discord.Member = None):
     vc = discord.utils.get(bot.voice_clients)
     if not sound:
         with open('sounds.json', 'r') as f:
@@ -495,6 +481,26 @@ def play_sound(sound: str = None):
     if vc and vc.is_connected() and not vc.is_playing():
         vc.play(discord.FFmpegPCMAudio(f"sounds/{sound}"))
         print(f"Playing sound effect: {sound}")
+        if member:
+            # add log to sound
+            with open('sounds.json', 'r') as f:
+                sounds = json.load(f)
+            user_found = False
+            for s in sounds:
+                if s['filename'] == sound:
+                    if 'playedBy' not in s:
+                        s['playedBy'] = []
+                    for user in s['playedBy']:
+                        if user["id"] == str(member.id):
+                            user["times"] += 1
+                            user_found = True
+                            break
+                    if not user_found:
+                        s['playedBy'].append({"id": str(member.id),"name": member.name, "times": 1})
+                    updateLog(member, None, None, s)
+                    break
+            with open('sounds.json', 'w') as f:
+                json.dump(sounds, f, indent=2)
     elif vc and vc.is_playing():
         raise Exception("A sound is already playing")
     elif not vc or not vc.is_connected():
@@ -553,11 +559,76 @@ async def check_match_streak(user):
                     new_nick = new_nick.replace("(win streak)", "").replace("(loss streak)", "").strip()
                 
                 if new_nick != member.display_name:
-                    await member.edit(nick=new_nick)
-                    print(f"Updated {member.name} nickname to: {new_nick}")
+                    try:
+                        await member.edit(nick=new_nick)
+                        print(f"Updated {member.name} nickname to: {new_nick}")
+                    except discord.errors.Forbidden:
+                        print(f"Missing permissions to change nickname for {member.name}")
 
     except requests.RequestException as e:
         print(f"Error fetching data from the League of Legends API: {e}")
+
+def updateLog(member, before, after, sound = None):
+    print(member, before, after, sound)
+    with open('logs.json', 'r') as f:
+        log = json.load(f)
+
+    event = None
+    if sound:
+        event = "PLAYED_SOUND"
+    if before and after:
+        if before.channel is None and after.channel is not None:
+            event = "JOINED_CHANNEL"
+        elif before.channel is not None and after.channel is None:
+            event = "LEFT_CHANNEL"
+        elif before.channel != after.channel:
+            event = "MOVED_CHANNEL"
+        elif not before.self_stream and after.self_stream:
+            event = "STARTED_STREAMING"
+        elif before.self_stream and not after.self_stream:
+            event = "STOPPED_STREAMING"
+
+    if event:
+        if sound:
+            print(f"User {member.name} played sound {sound['displayname']}")
+            log_entry = {
+                "event": event,
+                "timestamp": int(time.time()),
+                "user": {
+                    "id": member.id,
+                    "name": member.name,
+                    "nick": member.nick,
+                    "is_on_mobile": member.is_on_mobile(),
+                },
+                "channel": {
+                    "id": member.voice.channel.id,
+                    "name": member.voice.channel.name
+                },
+                "sound": {
+                    "filename": sound["filename"],
+                    "displayname": sound["displayname"],
+                }
+            }
+        else:
+            log_entry = {
+                "event": event,
+                "timestamp": int(time.time()),
+                "user": {
+                    "id": member.id,
+                    "name": member.name,
+                    "nick": member.nick,
+                    "is_on_mobile": member.is_on_mobile(),
+                },
+                "channel": {
+                    "id": after.channel.id if after.channel else (before.channel.id if before.channel else member.voice.channel.id),
+                    "name": after.channel.name if after.channel else (before.channel.name if before.channel else member.voice.channel.name)
+                }
+            }
+        print(f"Log entry: {log_entry}")
+        log.append(log_entry)
+
+        with open('logs.json', 'w') as f:
+            json.dump(log, f, indent=2)
 
 
 bot.run(config.TOKEN)

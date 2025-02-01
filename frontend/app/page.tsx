@@ -1,27 +1,11 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import Sound from "./components/Sound";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
-import { getSounds } from "@/lib/sounds";
+import { getSounds, type Sound } from "@/lib/sounds";
 
-export interface Sound {
-  filename: string;
-  displayname: string;
-  category: string;
-  favorite: boolean;
-  favoritedBy: string[];
-  uploadedBy: {
-    id: string;
-    name: string;
-  };
-  playedBy: {
-    id: string;
-    name: string;
-    times: number;
-  }[];
-}
+
 
 export default function Home() {
   const searchParams = useSearchParams();

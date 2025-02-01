@@ -16,7 +16,7 @@ export default function UploadDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Upload sound</Button>
+        <Button className="dark:bg-[#3b3b3b] dark:text-foreground">Upload sound</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

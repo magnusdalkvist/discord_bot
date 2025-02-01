@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sound } from "../page";
 import SoundComponent from "./Sound";
-import { getEntranceSound, getSounds } from "@/lib/sounds";
+import { getEntranceSound, getSounds, Sound } from "@/lib/sounds";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -103,16 +102,6 @@ export default function SoundGrid({
     setPage(1);
   }, [sounds, filter, filters]);
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
-        {[...Array(pageSize)].map((_, index) => (
-          <Skeleton key={index} className="min-h-[150px] w-full rounded-lg" />
-        ))}
-      </div>
-    );
-  }
-
   const handleNextPage = () => {
     setPage((prev) => prev + 1);
   };
@@ -203,25 +192,33 @@ export default function SoundGrid({
         </div>
       )}
       <div className="grid grid-cols-[repeat(auto-fill,minmax(308px,1fr))] gap-4">
-        {sortedFilteredSounds.slice((page - 1) * pageSize, page * pageSize).map((sound, i) => (
-          <SoundComponent
-            sound={sound}
-            key={sound.filename}
-            entrance={sound.filename == entrance}
-            setEntrance={setEntrance}
-            favorited={
-              (session?.data?.user?.id && sound?.favoritedBy?.includes(session?.data?.user?.id)) ||
-              false
-            }
-            type={filter}
-            className={cn(
-              i == 0 && filter === "leaderboard" && "border-gold",
-              i == 1 && filter === "leaderboard" && "border-silver",
-              i == 2 && filter === "leaderboard" && "border-bronze"
-            )}
-          />
-        ))}
-        {sortedSounds.length === 0 && (
+        {isLoading ? (
+          [...Array(pageSize)].map((_, index) => (
+            <Skeleton key={index} className="min-h-[150px] w-full rounded-lg" />
+          ))
+        ) : sortedFilteredSounds ? (
+          sortedFilteredSounds
+            .slice((page - 1) * pageSize, page * pageSize)
+            .map((sound, i) => (
+              <SoundComponent
+                sound={sound}
+                key={sound.filename}
+                entrance={sound.filename == entrance}
+                setEntrance={setEntrance}
+                favorited={
+                  (session?.data?.user?.id &&
+                    sound?.favoritedBy?.includes(session?.data?.user?.id)) ||
+                  false
+                }
+                type={filter}
+                className={cn(
+                  i == 0 && page == 1 && filter === "leaderboard" && "border-gold",
+                  i == 1 && page == 1 && filter === "leaderboard" && "border-silver",
+                  i == 2 && page == 1 && filter === "leaderboard" && "border-bronze"
+                )}
+              />
+            ))
+        ) : (
           <>
             <div className="flex flex-col text-center items-center justify-center p-4 bg-[#f1f3f4] rounded-lg text-black min-h-[150px] w-full">
               <p className="font-semibold">It looks like there are no sounds here.</p>
