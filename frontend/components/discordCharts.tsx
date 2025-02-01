@@ -76,13 +76,15 @@ export function UserActivityChart() {
 
   return (
     <Card className="flex-1">
-      <CardHeader>
-        <CardTitle>User activity</CardTitle>
-        <CardDescription>
-          Displaying the peak user activity throughout the day.
-          <br />
-          <i>Data might not be accurate if the bot was down in the current period.</i>
-        </CardDescription>
+      <CardHeader className="flex flex-row flex-wrap gap-x-8 gap-y-4 justify-between space-y-0">
+        <div className="min-w-[330px] flex-1">
+          <CardTitle>User activity</CardTitle>
+          <CardDescription>
+            Displaying the peak user activity throughout the day.
+            <br />
+            <i>Data might not be accurate if the bot was down in the current period.</i>
+          </CardDescription>
+        </div>
         <DatePickerWithRange date={date} setDate={setDate} />
       </CardHeader>
       <CardContent>
@@ -160,13 +162,15 @@ export function SoundActivityChart() {
 
   return (
     <Card className="flex-1">
-      <CardHeader>
-        <CardTitle>Soundboard activity</CardTitle>
-        <CardDescription>
-          Displaying the sounds played throughout the day.
-          <br />
-          <i>Data might not be accurate if the bot was down in the current period.</i>
-        </CardDescription>
+      <CardHeader className="flex flex-row flex-wrap gap-x-8 gap-y-4 justify-between space-y-0">
+        <div className="min-w-[330px] flex-1">
+          <CardTitle>Soundboard activity</CardTitle>
+          <CardDescription>
+            Displaying the sounds played throughout the day.
+            <br />
+            <i>Data might not be accurate if the bot was down in the current period.</i>
+          </CardDescription>
+        </div>
         <DatePickerWithRange date={date} setDate={setDate} />
       </CardHeader>
       <CardContent>

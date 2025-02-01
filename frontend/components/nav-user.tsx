@@ -44,8 +44,8 @@ export function NavUser({
                   className="px-2 bg-[#5865f2] hover:bg-[#4f5cf3] h-8 justify-start w-full"
                   onClick={() => signIn("discord")}
                 >
-                  <div className="mx-auto flex items-center gap-2">
-                    <DiscordLogoIcon className="text-white" />
+                  <div className="mx-auto flex items-center gap-2 text-white">
+                    <DiscordLogoIcon />
                     Sign in with Discord
                   </div>
                 </Button>

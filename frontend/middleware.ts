@@ -15,8 +15,11 @@ export default auth((req) => {
   }
 
   const allowedPaths = ["/", "/soundboard", "/soundboard/leaderboard"];
+  const allowedGuilds = ["476435508638253056"]
 
-  if (!req.auth && !allowedPaths.includes(pathname)) {
+  const guild = req.auth?.user.guilds.find((guild: {id: string}) => allowedGuilds.includes(guild.id));
+  console.log(guild);
+  if ((!guild && !allowedPaths.includes(pathname))) {
     const newUrl = new URL("/", req.nextUrl.origin);
     newUrl.searchParams.set("redirected", "unauth");
     return Response.redirect(newUrl);
