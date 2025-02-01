@@ -4,6 +4,7 @@ import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 
 import { cn } from "@/lib/utils";
+import { SoundEvent } from "@/lib/discord";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
@@ -222,7 +223,7 @@ const ChartTooltipContent = React.forwardRef<
                         </div>
                         {item.value && (
                           <span className="font-mono font-medium tabular-nums text-foreground">
-                            {item.payload.botDown && "±"}{item.value.toLocaleString()}
+                            {item.payload.botDown && "~"}{item.value.toLocaleString()}
                           </span>
                         )}
                       </div>
@@ -239,7 +240,7 @@ const ChartTooltipContent = React.forwardRef<
                 <div className="text-muted-foreground">
                   {[
                     ...new Set(
-                      item?.payload?.soundEvents?.map((event: any) => event.sound.displayname)
+                      item?.payload?.soundEvents?.map((event: SoundEvent) => event.sound.displayname)
                     ),
                   ].map((displayName, i) => (
                     <div key={i}>{displayName as string}</div>

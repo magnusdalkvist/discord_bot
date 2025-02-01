@@ -1,13 +1,6 @@
 "use client";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
@@ -24,6 +17,7 @@ import {
 } from "@/lib/discord";
 import { DatePickerWithRange } from "./ui/datarange";
 import { DateRange } from "react-day-picker";
+import { NameType, Payload, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 const chartConfig = {
   activeCount: {
@@ -40,7 +34,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const getLabel = (i: any, differenceHours: number) => {
+const getLabel = (i: Payload<ValueType, NameType>[], differenceHours: number) => {
   return `${
     differenceHours / 24 > 5
       ? new Date(i[0].payload.timestamp * 1000).toLocaleDateString("en-GB", {
@@ -78,7 +72,7 @@ export function UserActivityChart() {
       const processedData = processUserActivity(logs, startTime, endTime, iterations);
       setChartData(processedData);
     });
-  }, [date]);
+  }, [date, startTime, endTime, iterations]);
 
   return (
     <Card className="flex-1">
@@ -162,7 +156,7 @@ export function SoundActivityChart() {
       const processedData = processSoundActivity(logs, startTime, endTime, iterations);
       setChartData(processedData);
     });
-  }, [date]);
+  }, [date, startTime, endTime, iterations]);
 
   return (
     <Card className="flex-1">
@@ -177,13 +171,7 @@ export function SoundActivityChart() {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <BarChart
-            accessibilityLayer
-            data={chartData.map((entry) => ({
-              ...entry,
-              fill: entry.botDown ? "var(--color-botDown)" : "var(--color-soundCount)",
-            }))}
-          >
+          <BarChart accessibilityLayer>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="timestamp"
@@ -214,7 +202,7 @@ export function SoundActivityChart() {
                 />
               }
             />
-            <Bar dataKey="soundCount" fill="fill" radius={4} />
+            <Bar dataKey="soundCount" fill="var(--color-soundCount)" radius={4} />
           </BarChart>
         </ChartContainer>
       </CardContent>

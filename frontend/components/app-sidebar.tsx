@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Volume2 } from "lucide-react";
+import { LucideIcon, Volume2 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -24,7 +24,7 @@ const data = {
     {
       title: "Discord",
       url: "/discord",
-      icon: DiscordLogoIcon,
+      icon: DiscordLogoIcon as LucideIcon,
       isActive: true,
       items: [
         {
