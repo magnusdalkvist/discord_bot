@@ -6,6 +6,7 @@ export default auth((req) => {
   // Exclude specific paths
   if (
     pathname.startsWith("/api/") ||
+    pathname.startsWith("/auth/") ||
     pathname.startsWith("/_next/static/") ||
     pathname.startsWith("/_next/image/") ||
     pathname === "/favicon.ico" ||
