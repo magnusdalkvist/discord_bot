@@ -4,7 +4,7 @@ import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 
 import { cn } from "@/lib/utils";
-import { SoundEvent } from "@/lib/discord";
+import { Log, SoundEvent } from "@/lib/discord";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
@@ -232,8 +232,8 @@ const ChartTooltipContent = React.forwardRef<
                 </div>
                 {item?.payload?.activeUsers &&
                 <div className="text-muted-foreground">
-                  {item?.payload?.activeUsers?.map((user: string, i: number) => (
-                    <div key={i}>{user}</div>
+                  {item?.payload?.activeUsers?.map((user: { name: string; channel: Log["channel"] }, i: number) => (
+                    <div key={i}>{user.name}</div>
                   ))}
                 </div>}
                 {item?.payload?.soundEvents &&

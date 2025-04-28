@@ -30,7 +30,7 @@ export interface Log {
 export interface TimeSeriesPoint {
   timestamp: number;
   activeCount: number | null;
-  activeUsers: string[];
+  activeUsers: { name: string; channel: { id: number; name: string } }[];
   botDown?: boolean;
 }
 
@@ -53,21 +53,28 @@ export function processUserActivity(
   logs: Log[],
   startTime?: number,
   endTime?: number,
-  iterations?: number
+  iterations?: number,
+  channelId?: number
 ): FilledTimeSeriesPoint[] {
   // Sort logs in chronological order.
   const sortedLogs = [...logs].sort((a, b) => a.timestamp - b.timestamp);
-  const activeUsers = new Map<number, string>();
+  const filteredLogs = channelId
+    ? sortedLogs.filter((log) => log.event === "BOT_DOWN" || log.event === "LEFT_CHANNEL" || log.channel.id === channelId)
+    : sortedLogs;
+  const activeUsers = new Map<number, { name: string; channel: Log["channel"] }>();
   const timeSeries: TimeSeriesPoint[] = [];
 
   // Build raw time series from log events.
-  for (const log of sortedLogs) {
+  for (const log of filteredLogs) {
     switch (log.event) {
       case "JOINED_CHANNEL":
       case "MOVED_CHANNEL":
       case "PLAYED_SOUND":
       case "STARTED_STREAMING":
-        activeUsers.set(log.user.id, log.user.nick);
+        activeUsers.set(log.user.id, {
+          name: log.user.nick || log.user.name,
+          channel: log.channel,
+        });
         break;
       case "LEFT_CHANNEL":
         activeUsers.delete(log.user.id);
@@ -80,7 +87,7 @@ export function processUserActivity(
           activeUsers: [],
           botDown: true,
         });
-        continue; // Skip the standard push below.
+        continue;
     }
     timeSeries.push({
       timestamp: log.timestamp,
@@ -92,6 +99,15 @@ export function processUserActivity(
   // If no interval parameters are provided, return the raw time series.
   if (startTime == null || endTime == null || iterations == null) {
     return timeSeries;
+  }
+
+  // Find the latest state preceding startTime
+  let initialState: TimeSeriesPoint | null = null;
+  for (let i = timeSeries.length - 1; i >= 0; i--) {
+    if (timeSeries[i].timestamp < startTime) {
+      initialState = timeSeries[i];
+      break;
+    }
   }
 
   const interval = (endTime - startTime) / iterations;
@@ -118,13 +134,15 @@ export function processUserActivity(
 
     // No data in this interval: carry forward last known state.
     if (dataPoints.length === 0 && currentTimestamp < now) {
+      // Use the earlier interval's filled data if available, otherwise use initialState.
       const lastEntry = filledTimeSeries[filledTimeSeries.length - 1];
+      const fallback = lastEntry?.lastSeries ?? lastEntry ?? initialState;
       filledTimeSeries.push({
         timestamp: currentTimestamp,
-        activeCount: lastEntry ? lastEntry.lastSeries?.activeCount ?? lastEntry.activeCount : null,
-        activeUsers: lastEntry ? lastEntry.lastSeries?.activeUsers ?? lastEntry.activeUsers : [],
-        lastSeries: lastEntry?.lastSeries,
-        botDown: lastEntry ? lastEntry.lastSeries?.botDown ?? lastEntry.botDown : undefined,
+        activeCount: fallback ? fallback.activeCount : null,
+        activeUsers: fallback ? fallback.activeUsers : [],
+        lastSeries: fallback,
+        botDown: fallback ? fallback.botDown : undefined,
       });
       currentTimestamp += interval;
       continue;
@@ -133,7 +151,6 @@ export function processUserActivity(
     // Select the data point with the highest activeCount.
     let maxPoint: TimeSeriesPoint | null = null;
     for (const point of dataPoints) {
-      // Note: 0 is a valid count so we explicitly check for null.
       if (
         point.activeCount !== null &&
         (maxPoint === null ||
@@ -164,7 +181,6 @@ export function processUserActivity(
     });
     currentTimestamp += interval;
   }
-
   return filledTimeSeries;
 }
 
@@ -198,7 +214,7 @@ export function processSoundActivity(
       soundEvents: [
         {
           timestamp: log.timestamp,
-          user: log.user.nick,
+          user: log.user.nick || log.user.name,
           sound: log.sound!,
         },
       ],

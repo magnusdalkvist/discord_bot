@@ -4,15 +4,15 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import random
 import config
-import os
 import asyncio
 import json
 import requests
 import time
+import atexit
+import aiohttp
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 chance = 50
-
 
 # EVENTS
 @bot.event
@@ -31,6 +31,17 @@ async def on_ready():
 
     if not get_lol_data.is_running():
         get_lol_data.start()
+
+
+@bot.event
+async def on_disconnect():
+    print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} Bot disconnected. Starting reconnection check.")
+    # Schedule a task to check after 600 seconds.
+    asyncio.create_task(check_reconnection(600))
+
+@bot.event
+async def on_connect():
+    print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} Bot connected.")
 
 
 @bot.event
@@ -456,6 +467,16 @@ async def get_lol_data():
 
 
 # Functions
+async def check_reconnection(timeout):
+    await asyncio.sleep(timeout)
+    # If the bot hasn’t become ready again, log the BOT_DOWN event.
+    if not bot.is_closed() and not bot.is_ready():
+        print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} Bot did not reconnect within {timeout} seconds, logging BOT_DOWN event.")
+        log_bot_down(f"Bot did not reconnect within {timeout} seconds.")
+    else:
+        print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} Bot reconnected within {timeout} seconds—no BOT_DOWN log necessary.")
+
+
 def get_entrance_sound(member: discord.Member):
     with open('sounds.json', 'r') as f:
         sounds = json.load(f)
@@ -508,42 +529,36 @@ def play_sound(sound: str = None, member: discord.Member = None):
         raise Exception("Not connected to a voice channel")
 
 
+async def fetch_api(url, params):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params) as resp:
+            resp.raise_for_status()
+            return await resp.json()
+
 async def check_match_streak(user):
     riot_name, riot_tag = user["account"].split("#")
-    # print(f"Getting data from the League of Legends API for user: {user['account']}")
     try:
-        # Fetch the puuid
-        response = requests.get(
-            f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{riot_name}/{riot_tag}",
-            params={"api_key": config.LOL_API_KEY}
-        )
-        response.raise_for_status()
-        puuid = response.json()["puuid"]
+        # Fetch the puuid using aiohttp
+        url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{riot_name}/{riot_tag}"
+        data = await fetch_api(url, params={"api_key": config.LOL_API_KEY})
+        puuid = data["puuid"]
 
         # Fetch the match IDs
-        response = requests.get(
-            f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids",
-            params={"queueId": 420, "count": 2, "api_key": config.LOL_API_KEY}
-        )
-        response.raise_for_status()
-        match_ids = response.json()
+        url = f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
+        match_ids = await fetch_api(url, params={"queueId": 420, "count": 2, "api_key": config.LOL_API_KEY})
 
         # Fetch match details for each match ID
         win_statuses = []
         for match_id in match_ids:
-            response = requests.get(
-                f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id}",
-                params={"api_key": config.LOL_API_KEY}
-            )
-            response.raise_for_status()
-            match_details = response.json()
+            url = f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id}"
+            match_details = await fetch_api(url, params={"api_key": config.LOL_API_KEY})
             participants = match_details["info"]["participants"]
             for participant in participants:
                 if participant["puuid"] == puuid:
                     win_statuses.append(participant["win"])
                     break
 
-        # Check the win/loss streak and update the nickname
+        # Continue with updating nickname...
         guild = bot.get_guild(476435508638253056)
         member = guild.get_member(int(user["discord_id"]))
         if member:
@@ -565,11 +580,10 @@ async def check_match_streak(user):
                     except discord.errors.Forbidden:
                         print(f"Missing permissions to change nickname for {member.name}")
 
-    except requests.RequestException as e:
+    except Exception as e:
         print(f"Error fetching data from the League of Legends API: {e}")
 
 def updateLog(member, before, after, sound = None):
-    print(member, before, after, sound)
     with open('logs.json', 'r') as f:
         log = json.load(f)
 
@@ -587,10 +601,11 @@ def updateLog(member, before, after, sound = None):
             event = "STARTED_STREAMING"
         elif before.self_stream and not after.self_stream:
             event = "STOPPED_STREAMING"
+        elif before.self_deaf != after.self_deaf or before.self_mute != after.self_mute:
+            event = "VOICE_STATE_CHANGED"
 
     if event:
         if sound:
-            print(f"User {member.name} played sound {sound['displayname']}")
             log_entry = {
                 "event": event,
                 "timestamp": int(time.time()),
@@ -599,6 +614,10 @@ def updateLog(member, before, after, sound = None):
                     "name": member.name,
                     "nick": member.nick,
                     "is_on_mobile": member.is_on_mobile(),
+                },
+                "voiceState": {
+                    "deafened": False if event == "LEFT_CHANNEL" else member.voice.self_deaf,
+                    "muted": False if event == "LEFT_CHANNEL" else member.voice.self_mute,
                 },
                 "channel": {
                     "id": member.voice.channel.id,
@@ -619,16 +638,39 @@ def updateLog(member, before, after, sound = None):
                     "nick": member.nick,
                     "is_on_mobile": member.is_on_mobile(),
                 },
+                "voiceState": {
+                    "deafened": False if event == "LEFT_CHANNEL" else member.voice.self_deaf,
+                    "muted": False if event == "LEFT_CHANNEL" else member.voice.self_mute,
+                },
                 "channel": {
                     "id": after.channel.id if after.channel else (before.channel.id if before.channel else member.voice.channel.id),
                     "name": after.channel.name if after.channel else (before.channel.name if before.channel else member.voice.channel.name)
                 }
             }
-        print(f"Log entry: {log_entry}")
         log.append(log_entry)
 
         with open('logs.json', 'w') as f:
             json.dump(log, f, indent=2)
 
+def log_bot_down(reason="Bot shut down"):
+    with open('logs.json', 'r') as f:
+        logs = json.load(f)
+    # Only log if the last entry is not a "BOT_DOWN" event.
+    if not logs or logs[-1].get("event") != "BOT_DOWN":
+        logs.append({
+            "event": "BOT_DOWN",
+            "timestamp": int(time.time()),
+            "reason": reason
+        })
+        with open('logs.json', 'w') as f:
+            json.dump(logs, f, indent=2)
+        print("BOT_DOWN event logged.")
 
-bot.run(config.TOKEN)
+atexit.register(log_bot_down)
+
+try:
+    bot.run(config.TOKEN)
+except Exception as e:
+    print(f"Error starting bot: {e}")
+    log_bot_down("Error starting bot")
+    raise e

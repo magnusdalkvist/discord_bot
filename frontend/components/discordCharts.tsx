@@ -15,9 +15,10 @@ import {
   processUserActivity,
   SoundInterval,
 } from "@/lib/discord";
-import { DatePickerWithRange } from "./ui/datarange";
+import { DatePickerWithRange } from "./ui/daterange";
 import { DateRange } from "react-day-picker";
 import { NameType, Payload, ValueType } from "recharts/types/component/DefaultTooltipContent";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 const chartConfig = {
   activeCount: {
@@ -50,6 +51,8 @@ const getLabel = (i: Payload<ValueType, NameType>[], differenceHours: number) =>
 
 export function UserActivityChart() {
   const [chartData, setChartData] = useState<FilledTimeSeriesPoint[]>([]);
+  const [selection, setSelection] = useState<string>("");
+  const [voiceChannels, setVoiceChannels] = useState<{ id: string; name: string }[]>([]);
 
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(),
@@ -69,10 +72,27 @@ export function UserActivityChart() {
 
   useEffect(() => {
     getLogs().then((logs) => {
-      const processedData = processUserActivity(logs, startTime, endTime, iterations);
+      const processedData = processUserActivity(
+        logs,
+        startTime,
+        endTime,
+        iterations,
+        selection == "all" ? undefined : Number(selection)
+      );
       setChartData(processedData);
     });
-  }, [date, startTime, endTime, iterations]);
+  }, [date, startTime, endTime, iterations, selection]);
+
+  useEffect(() => {
+    getLogs().then((logs) => {
+      const channels = logs.filter((log) => log.channel).map((log) => log.channel);
+      setVoiceChannels(
+        Array.from(new Set(channels.map((channel) => JSON.stringify(channel)))).map((channel) =>
+          JSON.parse(channel)
+        )
+      );
+    });
+  }, []);
 
   return (
     <Card className="flex-1">
@@ -85,7 +105,27 @@ export function UserActivityChart() {
             <i>Data might not be accurate if the bot was down in the current period.</i>
           </CardDescription>
         </div>
-        <DatePickerWithRange date={date} setDate={setDate} />
+        <div className="flex flex-col gap-2">
+          <DatePickerWithRange date={date} setDate={setDate} />
+          <Select
+            value={selection}
+            onValueChange={(value) => {
+              setSelection(value);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select channel" />
+            </SelectTrigger>
+            <SelectContent position="popper">
+              <SelectItem value="all">All</SelectItem>
+              {voiceChannels.map((channel) => (
+                <SelectItem key={channel.id} value={channel.id}>
+                  {channel.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
