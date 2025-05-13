@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "env-cmd -f .env.development next dev --turbopack",
-    "build": "env-cmd -f .env.production next build && pm2 reload sarah.bils.space",
+    "build": "env-cmd -f .env.production next build && pm2 reload sarah.bils.hair",
     "start": "next start",
     "lint": "next lint"
   },

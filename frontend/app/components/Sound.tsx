@@ -32,7 +32,7 @@ export default function Sound({
   entrance: boolean;
   setEntrance: (filename: string) => void;
 }) {
-  const soundUrl = `https://sarah.bils.space/api/sounds/${sound.filename}`;
+  const soundUrl = `https://sarah.bils.hair/api/sounds/${sound.filename}`;
   const session = useSession();
   const [favorite, setFavorite] = useState(favorited || false);
 

@@ -17,7 +17,7 @@ export interface Sound {
 
 export async function getSounds(): Promise<Sound[]> {
   try {
-    const response = await fetch("https://sarah.bils.space/api/sounds", { cache: "no-store" });
+    const response = await fetch("https://sarah.bils.hair/api/sounds", { cache: "no-store" });
     if (!response.ok) {
       throw new Error("Failed to fetch sounds");
     }
@@ -30,7 +30,7 @@ export async function getSounds(): Promise<Sound[]> {
 
 export async function getSound(filename: string): Promise<Sound | undefined> {
   try {
-    const response = await fetch(`https://sarah.bils.space/api/sounds/${filename}`);
+    const response = await fetch(`https://sarah.bils.hair/api/sounds/${filename}`);
     if (!response.ok) {
       throw new Error("Failed to fetch sound");
     }
@@ -41,7 +41,7 @@ export async function getSound(filename: string): Promise<Sound | undefined> {
 }
 
 export async function uploadSound(formData: FormData): Promise<Response> {
-  const response = await fetch("https://sarah.bils.space/api/sounds/upload", {
+  const response = await fetch("https://sarah.bils.hair/api/sounds/upload", {
     method: "POST",
     body: formData,
   });
@@ -50,7 +50,7 @@ export async function uploadSound(formData: FormData): Promise<Response> {
 
 export async function deleteSound(filename: string, userId: string): Promise<boolean> {
   try {
-    const response = await fetch(`https://sarah.bils.space/api/sounds/${filename}`, {
+    const response = await fetch(`https://sarah.bils.hair/api/sounds/${filename}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId }),
@@ -63,7 +63,7 @@ export async function deleteSound(filename: string, userId: string): Promise<boo
 }
 
 export async function editSound(filename: string, formData: FormData): Promise<Response> {
-  const response = await fetch(`https://sarah.bils.space/api/sounds/${filename}`, {
+  const response = await fetch(`https://sarah.bils.hair/api/sounds/${filename}`, {
     method: "PUT",
     body: formData,
   });
@@ -77,7 +77,7 @@ export async function favoriteSound(
 ): Promise<boolean> {
   try {
     const response = await fetch(
-      `https://sarah.bils.space/api/users/${userId}/favorites/${filename}`,
+      `https://sarah.bils.hair/api/users/${userId}/favorites/${filename}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -93,7 +93,7 @@ export async function favoriteSound(
 
 export async function setEntranceSound(filename: string, userId: string): Promise<boolean> {
   try {
-    const response = await fetch(`https://sarah.bils.space/api/users/${userId}/entrance`, {
+    const response = await fetch(`https://sarah.bils.hair/api/users/${userId}/entrance`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ filename }),
@@ -109,7 +109,7 @@ export async function getEntranceSound(
   userId: string
 ): Promise<{ entrance_sound: string } | undefined> {
   try {
-    const response = await fetch(`https://sarah.bils.space/api/users/${userId}/entrance`);
+    const response = await fetch(`https://sarah.bils.hair/api/users/${userId}/entrance`);
     if (!response.ok) {
       throw new Error("Failed to fetch entrance sound");
     }

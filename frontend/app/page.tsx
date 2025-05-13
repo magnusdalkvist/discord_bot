@@ -21,7 +21,7 @@ export default function Home() {
   const playSound = () => {
     if (sounds.length === 0) return;
     const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
-    const audio = new Audio(`https://sarah.bils.space/api/sounds/${randomSound.filename}`);
+    const audio = new Audio(`https://sarah.bils.hair/api/sounds/${randomSound.filename}`);
     
     setImageSrc("/cat-speak.png");
     audio.play();

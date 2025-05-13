@@ -40,7 +40,7 @@ export interface FilledTimeSeriesPoint extends TimeSeriesPoint {
 
 export async function getLogs(): Promise<Log[]> {
   try {
-    const response = await fetch("https://sarah.bils.space/api/logs", { cache: "no-store" });
+    const response = await fetch("https://sarah.bils.hair/api/logs", { cache: "no-store" });
     if (!response.ok) throw new Error("Failed to fetch logs");
     return response.json();
   } catch (error) {
